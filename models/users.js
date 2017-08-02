@@ -1,8 +1,19 @@
 var redisClient = require('../components/redis');
 
-module.exports.list = function(req, res){
-    res.setHeader('Content-Type', 'application/json;charset=utf-8');
-    res.send(users);
+module.exports.list = function(callback){
+    redisClient.hgetall('users', function(error, res){
+        if(error) {
+            console.log(error);
+        } else {
+            var result = {};
+            if(res!=null){
+                for(var i in res){
+                    result[i] = JSON.parse(res[i]);
+                }
+            }
+            callback(null,result);
+        }
+    });
 };
 
 module.exports.get = function(id,callback){
@@ -10,11 +21,9 @@ module.exports.get = function(id,callback){
         if(error) {
             console.log(error);
         } else {
-            var result;
+            var result = [];
             if(res[id]){
                 result = JSON.parse(res[id]);
-            }else{
-                result = [];
             }
             callback(null,result);
         }
@@ -22,71 +31,23 @@ module.exports.get = function(id,callback){
 };
 
 module.exports.add = function(data,callback){
-
     redisClient.hlen('users',function(error,res){
         if(error) {
             console.log(error);
         } else {
-            //console.log(res);
-            //var len = res;
-            var sub_key = res +1;
+            //res = 数据长度
+            var sub_key = res + 1;
+            //为data增加一个值 id
+            data.id = sub_key;
             redisClient.hset('users', sub_key , JSON.stringify(data) , function(error, res) {
                 if (error) {
                     console.log(error);
                 } else {
-                    //console.log(res);
-
                     callback(null,{id:sub_key});
                 }
             })
-
-            /*
-            redisClient.hgetall('users', function(error, res) {
-                if(error) {
-                    console.log(error);
-                } else {
-                    console.log(res);
-var sub_key;
-                    if(res==null){
-                        sub_key = 1;
-
-                    }else{
-
-                    }
-                }
-            })*/
         }
     });
-/*
-
-    redisClient.hmset('user:'+id, req.body, function(error, res) {
-        if(error) {
-            console.log(error);
-        } else {
-            console.log(res);
-        }
-
-        // 关闭链接
-        //redisClient.end(redisIndex);
-    });
-
-    callback(null,123);*/
-
-    /*users[req.body.id] = req.body;
-    res.send({status:"success", message:"add user success"});
-    console.log(users);
-
-    redisClient.hmset('user:'+id, req.body, function(error, res) {
-        if(error) {
-            console.log(error);
-        } else {
-            console.log(res);
-        }
-
-        // 关闭链接
-        //redisClient.end(redisIndex);
-    });
-*/
 };
 
 
