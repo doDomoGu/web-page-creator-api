@@ -1,5 +1,12 @@
 var redisClient = require('../components/redis');
 
+var user = {
+    name:"",
+    password:"",
+    sex:"",
+    status:""
+}
+
 module.exports.list = function(callback){
     redisClient.hgetall('users', function(error, res){
         if(error) {
