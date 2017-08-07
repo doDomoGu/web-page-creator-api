@@ -97,11 +97,29 @@ module.exports.delete = function(id,callback){
 };
 
 
-module.exports.update = function(req, res){
-    res.setHeader('Content-Type', 'application/json;charset=utf-8');
-    users[req.body.id] = req.body;
-    res.send({status:"success", message:"update user success"});
-    console.log(users);
+module.exports.update = function(id, dataNew, callback){
+    redisClient.hgetall('users', function(error, res){
+        if(error) {
+            console.log(error);
+        } else {
+            if(res!=undefined && res[id]!=undefined){
+                var dataOld = JSON.parse(res[id]);
+                var data = {};
+                for(var i in user){
+                    data[i] = dataOld[i]!=undefined?(dataNew[i]!=undefined?dataNew[i]:dataOld[i]):user[i];
+                }
+                redisClient.hset('users', id , JSON.stringify(data) , function(error, res) {
+                    if (error) {
+                        console.log(error);
+                    } else {
+                        callback(null,{id:id,message:'update ok!'});
+                    }
+                })
+            }else{
+                callback(null,{id:id,message:'id wrong'});
+            }
+        }
+    });
 };
 
 
