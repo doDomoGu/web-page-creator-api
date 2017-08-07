@@ -37,4 +37,18 @@ router.get('/:id', function(req, res) {
     });
 });
 
+//删除单条 （逻辑删除）
+router.delete('/:id', function(req, res) {
+    users.delete(req.params.id,function(err, data){
+        if (err) {
+            console.error(err);
+        } else {
+            res.json(data);
+        }
+    });
+});
+
+
+
+
 module.exports = router;
