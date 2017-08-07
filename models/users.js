@@ -3,7 +3,9 @@ var redisClient = require('../components/redis');
 var user = {
     name: "",
     password: "",
-    sex: "",
+    sex: 0,
+    birthday: '',
+    email: '',
     status: 1
 };
 
@@ -33,9 +35,12 @@ module.exports.get = function(id,callback){
         if(error) {
             console.log(error);
         } else {
-            var result = [];
+            var result = {};
             if(res[id]){
-                result = JSON.parse(res[id]);
+                var resTemp = JSON.parse(res[id]);
+                for(var i in user){
+                    result[i] = resTemp[i]!=undefined?resTemp[i]:user[i];
+                }
             }
             callback(null,result);
         }
@@ -50,8 +55,14 @@ module.exports.add = function(data,callback){
             //res = 数据长度
             var sub_key = res + 1;
             //为data增加一个值 id
-            data.id = sub_key;
-            redisClient.hset('users', sub_key , JSON.stringify(data) , function(error, res) {
+            //data.id = sub_key;
+
+            var dataOne = {};
+            for(var i in user){
+                dataOne[i] = data[i]!=undefined?data[i]:user[i];
+            }
+
+            redisClient.hset('users', sub_key , JSON.stringify(dataOne) , function(error, res) {
                 if (error) {
                     console.log(error);
                 } else {
@@ -63,11 +74,26 @@ module.exports.add = function(data,callback){
 };
 
 
-module.exports.delete = function(req, res){
-    res.setHeader('Content-Type', 'application/json;charset=utf-8');
-    delete users[req.param('id')];
-    res.send({status:"success", message:"delete user success"});
-    console.log(users);
+module.exports.delete = function(id,callback){
+    redisClient.hgetall('users', function(error, res){
+        if(error) {
+            console.log(error);
+        } else {
+            if(res!=undefined && res[id]!=undefined){
+                var data = JSON.parse(res[id]);
+                data.status = 0;
+                redisClient.hset('users', id , JSON.stringify(data) , function(error, res) {
+                    if (error) {
+                        console.log(error);
+                    } else {
+                        callback(null,{id:id,message:'delete ok!'});
+                    }
+                })
+            }else{
+                callback(null,{id:id,message:'id wrong'});
+            }
+        }
+    });
 };
 
 
