@@ -1,12 +1,11 @@
 var redisClient = require('../components/redis');
 
 var user = {
-    name:"",
-    password:"",
-    sex:"",
-    status:1
-
-}
+    name: "",
+    password: "",
+    sex: "",
+    status: 1
+};
 
 module.exports.list = function(callback){
     redisClient.hgetall('users', function(error, res){
@@ -16,7 +15,12 @@ module.exports.list = function(callback){
             var result = {};
             if(res!=null){
                 for(var i in res){
-                    result[i] = JSON.parse(res[i]);
+                    var resTemp = JSON.parse(res[i]);
+                    var resOne = {};
+                    for(var j in user){
+                        resOne[j] = resTemp[j]!=undefined?resTemp[j]:user[j];
+                    }
+                    result[i] = resOne;
                 }
             }
             callback(null,result);
