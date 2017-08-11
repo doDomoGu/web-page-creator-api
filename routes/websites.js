@@ -1,5 +1,10 @@
 var router = require('./_routers');
 
-router.models = require('../models/websites');
+_model = require('../models/websites')
 
-module.exports = router;
+_router = new router(_model);
+
+
+module.exports = _router;
+
+

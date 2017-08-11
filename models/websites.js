@@ -1,14 +1,15 @@
 var models = require('./_models');
 
-models.modelName = 'websites';
+var websites = new models(
+    'websites',
+    {
+        name: "",
+        user_id: 0,
+        status: 12
+    }
+);
 
-models.model = {
-    name: "",
-    user_id: 0,
-    status: 1
-};
-
-module.exports = models;
+module.exports = websites;
 
 
 
