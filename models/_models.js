@@ -7,7 +7,7 @@ function _models(modelName,model){
             if(error) {
                 console.log(error);
             } else {
-                var result = {};
+                var result = [];
                 if(res!=null){
                     for(var i in res){
                         var resTemp = JSON.parse(res[i]);
@@ -15,7 +15,7 @@ function _models(modelName,model){
                         for(var j in model){
                             resOne[j] = resTemp[j]!=undefined?resTemp[j]:model[j];
                         }
-                        result[i] = resOne;
+                        result.push(resOne);
                     }
                 }
                 callback(null,result);
