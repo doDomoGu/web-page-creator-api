@@ -1,6 +1,8 @@
 var redisClient = require('../components/redis');
 
 function _models(modelName,model){
+    this.modelName = modelName;
+    this.model = model;
 
     this.list = function(callback){
         redisClient.hgetall(modelName, function(error, res){
