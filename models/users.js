@@ -14,6 +14,13 @@ var users = new models(
         status: 1
     }
 );
+
+var auth_roles = {
+    1:['super_admin'],
+    2:['user_admin','website_admin'],
+    3:['user_admin']
+};
+
 users.auth = function(data,callback){
     redisClient.hgetall(users.modelName, function(error, res){
         if(error) {
@@ -46,6 +53,7 @@ users.auth = function(data,callback){
                                     expiresIn: 60*60*24  // 24小时过期
                                 }
                             );
+                            result.roles = auth_roles[i]!=undefined?auth_roles[i]:[];
                         } else {
                             result.error_msg = '用户名或密码错误 (001)';
                         }
