@@ -19,50 +19,23 @@ router.post('/', function(req, res) {
         }
     });
 });
-/*
-//新增
-router.post('/', function(req, res) {
-    users.add(req.body,function(err, data){
+
+//根据token获取用户信息
+router.get('/', function(req, res) {
+    users.getUserInfoByToken(req.query,function(err,result){
         if (err) {
             console.error(err);
         } else {
-            res.json(data);
+            res.header("Access-Control-Allow-Origin", "*");
+            res.header('Access-Control-Allow-Methods', 'PUT, GET, POST, DELETE, OPTIONS');
+            res.header("Access-Control-Allow-Headers", "X-Requested-With");
+            res.header('Access-Control-Allow-Headers', 'Content-Type');
+
+
+            res.json(result);
         }
     });
 });
-
-//更新(修改)
-router.patch('/:id', function(req, res) {
-    users.update(req.params.id,req.body,function(err, data){
-        if (err) {
-            console.error(err);
-        } else {
-            res.json(data);
-        }
-    });
-});
-
-//获取单条
-router.get('/:id', function(req, res) {
-    users.get(req.params.id,function(err, data){
-        if (err) {
-            console.error(err);
-        } else {
-            res.json(data);
-        }
-    });
-});
-
-//删除单条 （逻辑删除）
-router.delete('/:id', function(req, res) {
-    users.delete(req.params.id,function(err, data){
-        if (err) {
-            console.error(err);
-        } else {
-            res.json(data);
-        }
-    });
-});*/
 
 
 module.exports = router;
