@@ -1,6 +1,6 @@
 var redisClient = require('../components/redis');
 var models = require('./_models');
-
+var jwt = require('jsonwebtoken');
 
 
 var users = new models(
@@ -19,9 +19,14 @@ users.auth = function(data,callback){
         if(error) {
             console.log(error);
         } else {
+            var result = {
+                error_msg : '位置错误',
+                success : false,
+                token : '',
+                user_id : 0,
+                roles : []
+            };
             var nameflag = false; //是否找到用户名
-            var errormsg = '未知错误';
-            var success = false;
 
             for(var i in res){
                 if(!nameflag) {
@@ -29,21 +34,32 @@ users.auth = function(data,callback){
                     if (_res.username == data.username) {
                         nameflag = true;
                         if (_res.password == data.password) {
-                            success = true;
-                            errormsg = false;
+                            result.success = true;
+                            result.error_msg = false;
+                            result.user_id = i;
+                            result.token = jwt.sign(
+                                {
+                                    user_id:_res.id
+                                },
+                                Math.floor(Math.random()*(10000-10+1)+10).toString(),
+                                {
+                                    expiresIn: 60*60*24  // 24小时过期
+                                }
+                            );
                         } else {
-                            errormsg = '用户名或密码错误 (001)';
+                            result.error_msg = '用户名或密码错误 (001)';
                         }
                     }
                 }
             }
 
             if(!nameflag){
-                errormsg = '用户名或密码错误 (002)';
+                result.error_msg = '用户名或密码错误 (002)';
                 //callback(null,{msg:'用户名或密码错误'});
             }
 
-            callback(null,{errormsg:errormsg,success:success});
+
+            callback(null,result);
         }
         //callback(error,{});
     });
