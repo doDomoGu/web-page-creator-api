@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "pm2": "NODE_APP_INSTANCE=api PORT=8887  pm2 start ./bin/www --name=web-page-api"
+    "pm2": "NODE_APP_INSTANCE=api PORT=8887  pm2 start ./bin/www --name=web-page-api",
+    "pm2s": "pm2 start ./bin/www --name=web-page-api --port=8887"
   },
   "dependencies": {
     "body-parser": "~1.17.1",
