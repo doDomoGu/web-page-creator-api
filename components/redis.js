@@ -1,18 +1,21 @@
 var redis = require('redis');
 var config = require('config');
+var redisConfig = config.get('redis');
+
 var options = {
-    host: config.get('redis.host'),
-    port: config.get('redis.port'),
-    password: config.get('redis.password')
+    host: redisConfig.host,
+    port: redisConfig.port,
+    password: redisConfig.password
 };
+
 var client = redis.createClient(options);
-var dbIndex = config.get('redis.index');
+var dbIndex = redisConfig.index;
 client.on('ready', function () {
     console.log('redis connected');
 });
 if(options.password){
     client.auth(options.password,function(){
-        console.log('通过认证');
+        console.log('redis auth success');
     });
 }
 
