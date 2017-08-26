@@ -1,26 +1,27 @@
-
-var mysql = require('../components/mysql')
+var redisClient = require('../components/redis');
 
 function _models(modelName,model){
     this.modelName = modelName;
     this.model = model;
 
-    this.list = function(callback) {
-        mysql.query('SELECT * FROM `' + this.modelName + '`', function (error, res, fields) {
-            if (error) throw error;
-
-            var result = [];
-
-            if (res != null) {
-                for (var i in res) {
-                    var resOne = {};
-                    for (var j in model) {
-                        resOne[j] = res[i][j] != undefined ? res[i][j] : this.model[j];
+    this.list = function(callback){
+        redisClient.hgetall(modelName, function(error, res){
+            if(error) {
+                console.log(error);
+            } else {
+                var result = [];
+                if(res!=null){
+                    for(var i in res){
+                        var resTemp = JSON.parse(res[i]);
+                        var resOne = {};
+                        for(var j in model){
+                            resOne[j] = resTemp[j]!=undefined?resTemp[j]:model[j];
+                        }
+                        result.push(resOne);
                     }
-                    result.push(resOne);
                 }
+                callback(null,result);
             }
-            callback(null, result);
         });
     };
 

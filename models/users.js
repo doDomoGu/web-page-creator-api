@@ -2,9 +2,8 @@ var redisClient = require('../components/redis');
 var models = require('./_models');
 var jwt = require('jsonwebtoken');
 
-
 var users = new models(
-    'users',
+    'user',
     {
         id: 0,
         username: "",
