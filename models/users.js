@@ -6,12 +6,14 @@ var jwt = require('jsonwebtoken');
 var users = new models(
     'users',
     {
+        id: 0,
         username: "",
         password: "",
-        sex: 0,
-        birthday: '',
-        email: '',
-        status: 1
+        name:"",
+        mobile: "",
+        email: "",
+        status: 0,
+        verify: 0
     }
 );
 
@@ -41,7 +43,7 @@ function generateToken(user_id){
                 }
             }
         }
-    })
+    });
 
     if(tokenExist){
         token = generateToken(user_id);
