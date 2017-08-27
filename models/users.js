@@ -13,7 +13,14 @@ var users = new models(
         email: "",
         status: 0,
         verify: 0
-    }
+    },
+    [
+        'username',
+        'password',
+        'name',
+        'mobile'
+    ]
+
 );
 
 var auth_roles = {
