@@ -1,21 +1,23 @@
 
 var mysql = require('../components/mysql')
 
-function _models(modelName,model){
+function _models(modelName,model,required){
     this.modelName = modelName;
     this.model = model;
+    this.required = required;
 
     this.list = function(callback) {
-        mysql.query('SELECT * FROM `' + this.modelName + '`', function (error, res, fields) {
+        mysql.query('SELECT * FROM `' + this.modelName + '`', function (error, res) {
             if (error) throw error;
 
             var result = [];
 
-            if (res != null) {
+            if (!!res) {
                 for (var i in res) {
                     var resOne = {};
                     for (var j in model) {
-                        resOne[j] = res[i][j] != undefined ? res[i][j] : this.model[j];
+                        //resOne[j] = res[i][j] != undefined ? res[i][j] : this.model[j];
+                        resOne[j] = res[i][j];
                     }
                     result.push(resOne);
                 }
@@ -25,45 +27,52 @@ function _models(modelName,model){
     };
 
     this.get = function(id,callback){
-        redisClient.hgetall(modelName, function(error, res){
-            if(error) {
-                console.log(error);
-            } else {
-                var result = {};
-                if(res[id]){
-                    var resTemp = JSON.parse(res[id]);
-                    for(var i in model){
-                        result[i] = resTemp[i]!=undefined?resTemp[i]:model[i];
-                    }
+        mysql.query('SELECT * FROM `' + this.modelName + '` WHERE id = ?',[id], function (error, res) {
+            if (error) throw error;
+
+            var result = {};
+
+            if(res.length==1){
+                for(var i in model){
+                    //result[i] = res[0][i]!=undefined?res[0][i]:this.model[i];
+                    result[i] = res[0][i];
                 }
-                callback(null,result);
             }
+            callback(null,result);
         });
     };
 
     this.add = function(data,callback){
-        redisClient.hlen(modelName,function(error,res){
-            if(error) {
-                console.log(error);
-            } else {
-                //res = 数据长度
-                var sub_key = res + 1;
-                //为data增加一个值 id
-                //data.id = sub_key;
-
-                var dataOne = {};
-                for(var i in model){
-                    dataOne[i] = data[i]!=undefined?data[i]:model[i];
-                }
-
-                redisClient.hset(modelName, sub_key , JSON.stringify(dataOne) , function(error, res) {
-                    if (error) {
-                        console.log(error);
-                    } else {
-                        callback(null,{id:sub_key});
-                    }
-                })
+        var dataOne = {};
+        for(var i in this.model){
+            if(data[i]!=undefined){
+                dataOne[i] = data[i];
             }
+        }
+
+        var requiredErr = {};
+        for(var j in this.required){
+            var _key =this.required[j];
+            if(dataOne[_key]==undefined){
+                requiredErr[_key] = 'is required';
+            }
+        }
+
+        if(JSON.stringify(requiredErr)!=='{}'){
+            return callback(null,requiredErr);
+        }
+
+        mysql.query('INSERT INTO `' + this.modelName + '` SET ?',dataOne, function (error, res) {
+            if (error) throw error;
+
+            /*var result = {};
+
+            if(res.length==1){
+                for(var i in model){
+                    result[i] = res[0][i]!=undefined?res[0][i]:model[i];
+                }
+            }*/
+            callback(null,{id:res.insertId});
         });
     };
 
