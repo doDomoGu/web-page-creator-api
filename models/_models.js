@@ -1,4 +1,3 @@
-
 var mysql = require('../components/mysql')
 
 function _models(modelName,model,required){
@@ -85,7 +84,6 @@ function _models(modelName,model,required){
 
 
     this.delete = function(id,callback){
-
         //检查是否存在
         mysql.query('SELECT * FROM `' + this.modelName + '` WHERE id = ?',[id], function (error, res) {
             if (error) throw error;
@@ -93,7 +91,7 @@ function _models(modelName,model,required){
             if(res.length == 0){
                 return callback(null,{error:'not exist'});
             }
-
+            //更新
             mysql.query('UPDATE `' + that.modelName + '` SET `status` = 0 WHERE id = ?',[id], function (error, res) {
                 if (error) throw error;
 
@@ -104,30 +102,29 @@ function _models(modelName,model,required){
 
 
     this.update = function(id, dataNew, callback){
-        redisClient.hgetall(modelName, function(error, res){
-            if(error) {
-                console.log(error);
-            } else {
-                if(res!=undefined && res[id]!=undefined){
-                    var dataOld = JSON.parse(res[id]);
-                    var data = {};
-                    for(var i in model){
-                        data[i] = dataOld[i]!=undefined?(dataNew[i]!=undefined?dataNew[i]:dataOld[i]):model[i];
-                    }
-                    redisClient.hset(modelName, id , JSON.stringify(data) , function(error, res) {
-                        if (error) {
-                            console.log(error);
-                        } else {
-                            callback(null,{id:id,message:'update ok!'});
-                        }
-                    })
-                }else{
-                    callback(null,{id:id,message:'id wrong'});
+        //检查是否存在
+        mysql.query('SELECT * FROM `' + this.modelName + '` WHERE id = ?',[id], function (error, res) {
+            if (error) throw error;
+
+            if(res.length == 0){
+                return callback(null,{error:'not exist'});
+            }
+            var dataOne = {};
+            //过滤字段
+            for(var i in that.model){
+                if(dataNew[i]!=undefined){
+                    dataOne[i] = dataNew[i];
                 }
             }
+
+            //更新
+            mysql.query('UPDATE `' + that.modelName + '` SET ? WHERE id = ?',[dataOne,id], function (error, res) {
+                if (error) throw error;
+
+                return callback(null,{id:id,update:'success'});
+            });
         });
     };
-
 }
 
 module.exports = _models;
