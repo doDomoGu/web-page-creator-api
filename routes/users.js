@@ -1,4 +1,6 @@
-var router = require('../components/router')
+var express = require('express');
+var router = new express.Router();
+
 var users = require('../models/users');
 
 
