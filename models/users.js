@@ -30,7 +30,6 @@ var auth_roles = {
     3:['user_admin']
 };
 
-
 function generateToken(user_id){
     var token = jwt.sign(
             {
@@ -172,28 +171,25 @@ users.auth = function(data,callback){
 
 users.getUserInfoByToken = function(data,callback){
     var token = data.token;
+    var result = {
+        success : false,
+        token : '',
+        user_id : 0,
+        roles : []
+    };
+    mysql.query('select * from `user_auth_token` where token = ?',[token], function (error, res) {
+        if (error) throw error;
 
-    redisClient.hgetall('wpc_jwt', function(error, res) {
-        var result = {
-            success : false,
-            token : '',
-            user_id : 0,
-            roles : []
-        };
-
-        for(var i in res){
-            if(i==token){
-                var _res = JSON.parse(res[i]);
-                result.success = true;
-                result.token = token;
-                result.user_id = _res.user_id;
-                result.roles = _res.roles;
-            }
+        if(res.length==1){
+            result.success = true;
+            result.token = token;
+            result.user_id = res[0].user_id;
+            result.roles = auth_roles[res[0].user_id];
         }
-        callback(null,result);
-    })
 
 
+        return callback(null,result);
+    });
 }
 
 
