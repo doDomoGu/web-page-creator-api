@@ -69,13 +69,6 @@ function _models(modelName,model,required){
         mysql.query('INSERT INTO `' + this.modelName + '` SET ?',dataOne, function (error, res) {
             if (error) throw error;
 
-            /*var result = {};
-
-            if(res.length==1){
-                for(var i in model){
-                    result[i] = res[0][i]!=undefined?res[0][i]:model[i];
-                }
-            }*/
             return callback(null,{id:res.insertId});
         });
     };
