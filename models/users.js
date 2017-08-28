@@ -89,11 +89,11 @@ users.auth = function(data,callback){
 
                 var expired_time = '';
                 expired_time += expired.getFullYear();
-                expired_time += "-"+(expired.getMonth()+1 < 10 ? '0' + (expired.getMonth()+1) : (expired.getMonth()+1));
-                expired_time += "-"+(expired.getDate() < 10 ? '0' + expired.getDate() : expired.getDate());
-                expired_time += " "+expired.getHours();
-                expired_time += ":"+expired.getMinutes();
-                expired_time += ":"+expired.getSeconds();
+                expired_time += "-"+ (expired.getMonth()+1 < 10 ? '0' + (expired.getMonth()+1) : (expired.getMonth()+1));
+                expired_time += "-"+ (expired.getDate() < 10 ? '0' + expired.getDate() : expired.getDate());
+                expired_time += " "+ (expired.getHours() < 10 ? '0' + expired.getHours() : expired.getHours());
+                expired_time += ":"+ (expired.getMinutes() < 10 ? '0' + expired.getMinutes() : expired.getMinutes());
+                expired_time += ":"+ (expired.getSeconds() < 10 ? '0' + expired.getSeconds() : expired.getSeconds());
 
 
                 mysql.query('INSERT INTO `user_auth_token` SET ?',{user_id:_res.id,token:token,expired_time:expired_time}, function (error, res) {
@@ -190,7 +190,39 @@ users.getUserInfoByToken = function(data,callback){
 
         return callback(null,result);
     });
-}
+};
+users.deleteToken = function(data,callback){
+    var token = data.token;
+    var result = {
+        success : false
+    };
+    mysql.query('select * from `user_auth_token` where token = ?',[token], function (error, res) {
+        if (error) throw error;
+
+        if(res.length==1){
+            var expired = new Date(new Date().getTime() - 1000);
+
+            var expired_time = '';
+            expired_time += expired.getFullYear();
+            expired_time += "-"+ (expired.getMonth()+1 < 10 ? '0' + (expired.getMonth()+1) : (expired.getMonth()+1));
+            expired_time += "-"+ (expired.getDate() < 10 ? '0' + expired.getDate() : expired.getDate());
+            expired_time += " "+ (expired.getHours() < 10 ? '0' + expired.getHours() : expired.getHours());
+            expired_time += ":"+ (expired.getMinutes() < 10 ? '0' + expired.getMinutes() : expired.getMinutes());
+            expired_time += ":"+ (expired.getSeconds() < 10 ? '0' + expired.getSeconds() : expired.getSeconds());
+
+            mysql.query('UPDATE `user_auth_token` SET expired_time = ? where id = ?',[expired_time,res[0].id], function (error, res) {
+                if(error){
+                    return callback(error);
+                }else{
+
+                    result.success = true;
+
+                    return callback(null,result);
+                }
+            })
+        }
+    });
+};
 
 
 module.exports = users;

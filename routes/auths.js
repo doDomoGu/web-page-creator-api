@@ -25,6 +25,17 @@ router.get('/', function(req, res) {
     });
 });
 
+//清除auth_token
+router.post('/delete', function(req, res) {
+    users.deleteToken(req.body,function(err,result){
+        if (err) {
+            console.error(err);
+        } else {
+            res.json(result);
+        }
+    });
+});
+
 
 module.exports = router;
 
