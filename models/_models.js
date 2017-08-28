@@ -7,7 +7,6 @@ function _models(modelName,model,required){
 
     var that = this;
 
-
     this.list = function(callback) {
         mysql.query('SELECT * FROM `' + this.modelName + '`', function (error, res) {
             if (error) throw error;
@@ -31,7 +30,6 @@ function _models(modelName,model,required){
     this.get = function(id,callback){
         mysql.query('SELECT * FROM `' + this.modelName + '` WHERE id = ?',[id], function (error, res) {
             if (error) throw error;
-                console.log(id,res);
             if(res.length == 0){
                 return callback(null,{error:'not exist'});
             }
