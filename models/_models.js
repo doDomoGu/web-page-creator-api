@@ -6,6 +6,9 @@ function _models(modelName,model,required){
     this.model = model;
     this.required = required;
 
+    var that = this;
+
+
     this.list = function(callback) {
         mysql.query('SELECT * FROM `' + this.modelName + '`', function (error, res) {
             if (error) throw error;
@@ -29,27 +32,31 @@ function _models(modelName,model,required){
     this.get = function(id,callback){
         mysql.query('SELECT * FROM `' + this.modelName + '` WHERE id = ?',[id], function (error, res) {
             if (error) throw error;
+                console.log(id,res);
+            if(res.length == 0){
+                return callback(null,{error:'not exist'});
+            }
 
             var result = {};
-
-            if(res.length==1){
-                for(var i in model){
-                    //result[i] = res[0][i]!=undefined?res[0][i]:this.model[i];
-                    result[i] = res[0][i];
-                }
+            for(var i in model){
+                //result[i] = res[0][i]!=undefined?res[0][i]:this.model[i];
+                result[i] = res[0][i];
             }
-            callback(null,result);
+            return callback(null,result);
         });
     };
 
     this.add = function(data,callback){
         var dataOne = {};
+
+        //过滤model中定义的字段
         for(var i in this.model){
             if(data[i]!=undefined){
                 dataOne[i] = data[i];
             }
         }
 
+        //判断必填字段
         var requiredErr = {};
         for(var j in this.required){
             var _key =this.required[j];
@@ -72,30 +79,26 @@ function _models(modelName,model,required){
                     result[i] = res[0][i]!=undefined?res[0][i]:model[i];
                 }
             }*/
-            callback(null,{id:res.insertId});
+            return callback(null,{id:res.insertId});
         });
     };
 
 
     this.delete = function(id,callback){
-        redisClient.hgetall(modelName, function(error, res){
-            if(error) {
-                console.log(error);
-            } else {
-                if(res!=undefined && res[id]!=undefined){
-                    var data = JSON.parse(res[id]);
-                    data.status = 0;
-                    redisClient.hset(modelName, id , JSON.stringify(data) , function(error, res) {
-                        if (error) {
-                            console.log(error);
-                        } else {
-                            callback(null,{id:id,message:'delete ok!'});
-                        }
-                    })
-                }else{
-                    callback(null,{id:id,message:'id wrong'});
-                }
+
+        //检查是否存在
+        mysql.query('SELECT * FROM `' + this.modelName + '` WHERE id = ?',[id], function (error, res) {
+            if (error) throw error;
+
+            if(res.length == 0){
+                return callback(null,{error:'not exist'});
             }
+
+            mysql.query('UPDATE `' + that.modelName + '` SET `status` = 0 WHERE id = ?',[id], function (error, res) {
+                if (error) throw error;
+
+                return callback(null,{id:id,status:0});
+            });
         });
     };
 
