@@ -21,6 +21,7 @@ usergroups.setUser = function(id,data,callback){
     var usergroup_id = id;
     var user_ids = data.user_ids;
     var user_id_arr = user_ids.split(',');
+
     var that = this;
 
     var result = {
@@ -38,11 +39,11 @@ usergroups.setUser = function(id,data,callback){
 
 
         for(var i in user_id_arr){
-            insertData.push({user_id:user_id_arr[i],usergroup_id:usergroup_id});
+            insertData.push('('+user_id_arr[i]+','+usergroup_id+')');
         }
 
 
-        mysql.query('insert ignore into `usergroup_user` set ?',insertData, function (error, res) {
+        mysql.query('insert ignore into `usergroup_user` (user_id,usergroup_id) values '+ insertData.join(','), function (error, res) {
             if (error){
                 return callback(null,error);
             }
