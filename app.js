@@ -9,8 +9,9 @@ var cors = require('cors');
 
 
 var index = require('./routes/index');
-var websites = require('./routes/websites');
 var users = require('./routes/users');
+var websites = require('./routes/websites');
+var usergroups = require('./routes/usergroups');
 var auths = require('./routes/auths');
 
 var app = express();
@@ -32,6 +33,7 @@ app.use(cors());
 app.use('/', index);
 app.use('/users', users);
 app.use('/websites', websites);
+app.use('/usergroups', usergroups);
 app.use('/auths', auths);
 
 

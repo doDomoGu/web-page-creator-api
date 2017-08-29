@@ -1,14 +1,60 @@
 var models = require('./_models');
-
+var mysql = require('../components/mysql');
 
 var usergroups = new models(
-    'users',
+    'usergroup',
     {
         id: 0,
         name:"",
         alias: "",
-        status: 0,
-    }
+        remark: "",
+        status: 0
+    },
+    [
+        'name',
+        'alias'
+    ]
 );
+
+
+usergroups.setUser = function(id,data,callback){
+    var usergroup_id = id;
+    var user_ids = data.user_ids;
+    var user_id_arr = user_ids.split(',');
+    var that = this;
+
+    var result = {
+        success : false,
+        usergroup_id : 0,
+        user_ids : []
+    };
+    mysql.query('delete from `usergroup_user` where usergroup_id = ? and user_id not in (?)',[usergroup_id,user_id_arr], function (error, res) {
+        if (error){
+            return callback(null,error);
+        }
+
+        var insertData = [];
+
+
+
+        for(var i in user_id_arr){
+            insertData.push({user_id:user_id_arr[i],usergroup_id:usergroup_id});
+        }
+
+
+        mysql.query('insert ignore into `usergroup_user` set ?',insertData, function (error, res) {
+            if (error){
+                return callback(null,error);
+            }
+
+            result.success = true;
+            result.usergroup_id = usergroup_id;
+            result.user_ids = user_ids;
+
+            return callback(null,result);
+
+        })
+    });
+};
 
 module.exports = usergroups;
