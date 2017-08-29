@@ -220,6 +220,10 @@ users.deleteToken = function(data,callback){
                     return callback(null,result);
                 }
             })
+        }else{
+            result.success = true;
+
+            return callback(null,result);
         }
     });
 };
