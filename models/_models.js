@@ -12,10 +12,14 @@ function _models(modelName,model,required){
         if(JSON.stringify(query)!=='{}'){
             sql += ' WHERE 1 = 1 ';
             for(var i in query){
-                sql += ' AND `'+i+'` like '+mysql.escape('%'+query[i]+'%');
+          //TODO 使用不同的判断符号
+                //console.log(i,query[i],typeof query[i]);
+                if(query[i]){
+                    sql += ' AND `'+i+'` like '+mysql.escape('%'+query[i]+'%');
+                }
             }
         }
-        console.log(sql);
+        //console.log(sql);
         mysql.query(sql, function (error, res) {
             if (error) throw error;
 
