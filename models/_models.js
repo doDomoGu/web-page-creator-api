@@ -7,8 +7,16 @@ function _models(modelName,model,required){
 
     var that = this;
 
-    this.list = function(callback) {
-        mysql.query('SELECT * FROM `' + this.modelName + '`', function (error, res) {
+    this.list = function(query,callback) {
+        var sql = 'SELECT * FROM `' + this.modelName + '`';
+        if(JSON.stringify(query)!=='{}'){
+            sql += ' WHERE 1 = 1 ';
+            for(var i in query){
+                sql += ' AND `'+i+'` like '+mysql.escape('%'+query[i]+'%');
+            }
+        }
+        console.log(sql);
+        mysql.query(sql, function (error, res) {
             if (error) throw error;
 
             var result = [];
