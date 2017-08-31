@@ -1,12 +1,12 @@
 var express = require('express');
-var router = new express.Router();
+var router = express.Router();
 
 var users = require('../models/users');
 
 
 //获取全部
 router.get('/', function(req, res) {
-    users.list(function(err, data){
+    users.list(req.query,function(err, data){
         if (err) {
             console.error(err);
         } else {
