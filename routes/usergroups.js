@@ -1,5 +1,5 @@
 var express = require('express');
-var router = new express.Router();
+var router = express.Router();
 
 var usergroups = require('../models/usergroups');
 
@@ -18,7 +18,7 @@ router.post('/users/:id', function(req, res) {
 
 //获取全部
 router.get('/', function(req, res) {
-    usergroups.list(function(err, data){
+    usergroups.list(req.query,function(err, data){
         if (err) {
             console.error(err);
         } else {
