@@ -1,4 +1,4 @@
-var mysql = require('../components/mysql')
+var mysql = require('../components/mysql');
 
 function _models(modelName,model,required){
     this.modelName = modelName;
@@ -35,7 +35,7 @@ function _models(modelName,model,required){
                     result.push(resOne);
                 }
             }
-            callback(null, result);
+            return callback(null, result);
         });
     };
 
