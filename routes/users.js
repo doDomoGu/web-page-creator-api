@@ -3,6 +3,29 @@ var router = express.Router();
 
 var users = require('../models/users');
 
+//根据多个用户ID (存在query信息中) 获取用户组信息
+router.get('/usergroups', function(req, res) {
+    users.getUsergroupsSet(req.query,function(err, data){
+        if (err) {
+            console.error(err);
+        } else {
+            res.json(data);
+        }
+    });
+});
+
+
+
+//根据单个用户ID 获取用户组信息
+router.get('/:id/usergroups', function(req, res) {
+    users.getUsergroups(req.params.id,req.query,function(err, data){
+        if (err) {
+            console.error(err);
+        } else {
+            res.json(data);
+        }
+    });
+});
 
 //获取全部
 router.get('/', function(req, res) {
@@ -58,6 +81,9 @@ router.delete('/:id', function(req, res) {
         }
     });
 });
+
+
+
 
 
 module.exports = router;
