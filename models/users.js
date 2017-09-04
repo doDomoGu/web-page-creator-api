@@ -228,5 +228,87 @@ users.deleteToken = function(data,callback){
     });
 };
 
+users.getUsergroups = function(id,query,callback){
+    var user_id = id;
+    //var user_ids = data.user_ids;
+    //var user_id_arr = user_ids.split(',');
+
+    var that = this;
+
+    var result = {
+        success : false,
+        user_id : 0,
+        usergroup_ids : []
+    };
+    mysql.query('select * from `usergroup_user` where user_id = ? ',[user_id], function (error, res) {
+        if (error){
+            return callback(null,error);
+        }
+
+        var usergroup_ids = [];
+
+        for(var i in res){
+            usergroup_ids.push(res[i].usergroup_id);
+        }
+
+        result.success = true;
+        result.user_id = user_id;
+        result.usergroup_ids = usergroup_ids;
+
+        return callback(null,result);
+
+    });
+
+};
+users.getUsergroupsSet = function(query,callback){
+    var user_ids = query.userids;
+
+    var user_id_arr = user_ids?user_ids.split(','):[];
+
+
+    var that = this;
+
+    var result = {
+        success : false,
+        data : []
+    };
+
+    mysql.query('select * from `usergroup` ', function (error, res) {
+        if (error){
+            return callback(null,error);
+        }
+
+        var usergroups = [];
+
+        for(var i in res){
+            usergroups[res[i].id] = res[i].name;
+        }
+
+        mysql.query('select * from `usergroup_user` where user_id in (?) ',[user_id_arr], function (error, res) {
+            if (error){
+                return callback(null,error);
+            }
+
+            var data = [];
+
+            for(var i in res){
+                if(!data[res[i].user_id]){
+                    data[res[i].user_id] = [];
+                }
+                var groupname = usergroups[res[i].usergroup_id];
+                if(groupname)
+                    data[res[i].user_id].push(groupname);
+            }
+
+            result.success = true;
+            //result.user_id = user_id;
+            //result.usergroup_ids = usergroup_ids;
+            result.data = data;
+
+            return callback(null,result);
+
+        });
+    });
+};
 
 module.exports = users;
