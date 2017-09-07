@@ -9,43 +9,56 @@ function _models(modelName,model,required){
 
     this.list = function(query,callback) {
         var sql = 'SELECT * FROM `' + this.modelName + '`';
+        var sqlCount = 'SELECT count(id) as `total_count` FROM `' + this.modelName + '`';
+        var where = ' WHERE 1 = 1 ';
+
         var page = 1;
         var pageSize = 10;
+
         if(JSON.stringify(query)!=='{}'){
-            sql += ' WHERE 1 = 1 ';
+
             for(var i in query){
           //TODO 使用不同的判断符号
                 //console.log(i,query[i],typeof query[i]);
                 if(i=='page'){
-                    page = query[i];
+                    page = parseInt(query[i]);
                 }else if(i=='pageSize'){
-                    pageSize = query[i];
+                    pageSize = parseInt(query[i]);
                 }else if(query[i]){
-                    sql += ' AND `'+i+'` like '+mysql.escape('%'+query[i]+'%');
+                    where += ' AND `'+i+'` like '+mysql.escape('%'+query[i]+'%');
                 }
             }
         }
 
-        sql += ' limit '+(page>1?parseInt((page-1)*pageSize):0)+','+pageSize;
-
-        
-        mysql.query(sql, function (error, res) {
+        mysql.query(sqlCount + where, function (error, res) {
             if (error) throw error;
 
-            var result = [];
+            var total_count = res[0].total_count;
 
-            if (!!res) {
-                for (var i in res) {
-                    var resOne = {};
-                    for (var j in model) {
-                        //resOne[j] = res[i][j] != undefined ? res[i][j] : this.model[j];
-                        resOne[j] = res[i][j];
+            var limit = ' limit '+(page>1?parseInt((page-1)*pageSize):0)+','+pageSize;
+
+
+            mysql.query(sql + where + limit, function (error, res) {
+                if (error) throw error;
+
+                var data = [];
+
+                if (!!res) {
+                    for (var i in res) {
+                        var resOne = {};
+                        for (var j in model) {
+                            //resOne[j] = res[i][j] != undefined ? res[i][j] : this.model[j];
+                            resOne[j] = res[i][j];
+                        }
+                        data.push(resOne);
                     }
-                    result.push(resOne);
                 }
-            }
-            return callback(null, result);
+                return callback(null,{total_count:total_count,data:data,page:page,pageSize:pageSize});
+            });
+
         });
+
+
     };
 
     this.get = function(id,callback){
