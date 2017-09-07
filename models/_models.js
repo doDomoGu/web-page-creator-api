@@ -9,17 +9,26 @@ function _models(modelName,model,required){
 
     this.list = function(query,callback) {
         var sql = 'SELECT * FROM `' + this.modelName + '`';
+        var page = 1;
+        var pageSize = 10;
         if(JSON.stringify(query)!=='{}'){
             sql += ' WHERE 1 = 1 ';
             for(var i in query){
           //TODO 使用不同的判断符号
                 //console.log(i,query[i],typeof query[i]);
-                if(query[i]){
+                if(i=='page'){
+                    page = query[i];
+                }else if(i=='pageSize'){
+                    pageSize = query[i];
+                }else if(query[i]){
                     sql += ' AND `'+i+'` like '+mysql.escape('%'+query[i]+'%');
                 }
             }
         }
-        //console.log(sql);
+
+        sql += ' limit '+(page>1?parseInt((page-1)*pageSize):0)+','+pageSize;
+
+        
         mysql.query(sql, function (error, res) {
             if (error) throw error;
 
