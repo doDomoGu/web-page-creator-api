@@ -181,10 +181,14 @@ users.getUserInfoByToken = function(data,callback){
         if (error) throw error;
 
         if(res.length==1){
-            result.success = true;
-            result.token = token;
-            result.user_id = res[0].user_id;
-            result.roles = auth_roles[res[0].user_id];
+            var expired = new Date(res[0].expired_time);
+            var now = new Date();
+            if(now < expired){
+                result.success = true;
+                result.token = token;
+                result.user_id = res[0].user_id;
+                result.roles = auth_roles[res[0].user_id];
+            }
         }
 
 
