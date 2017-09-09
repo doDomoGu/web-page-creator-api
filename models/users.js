@@ -315,4 +315,42 @@ users.getUsergroupsSet = function(query,callback){
     });
 };
 
+
+users.setUsergroups = function(id,data,callback){
+    var user_id = id;
+    var usergroup_ids = data.usergroup_ids;
+    var that = this;
+
+    var result = {
+        success : false,
+        user_id : 0,
+        usergroup_ids : []
+    };
+    mysql.query('delete from `usergroup_user` where user_id = ? and usergroup_id not in (?)',[user_id,usergroup_ids], function (error, res) {
+        if (error){
+            return callback(null,error);
+        }
+
+        var insertData = [];
+
+        for(var i in usergroup_ids){
+            insertData.push('('+user_id+','+usergroup_ids[i]+')');
+        }
+
+
+        mysql.query('insert ignore into `usergroup_user` (user_id,usergroup_id) values '+ insertData.join(','), function (error, res) {
+            if (error){
+                return callback(null,error);
+            }
+
+            result.success = true;
+            result.user_id = user_id;
+            result.usergroup_ids = usergroup_ids;
+
+            return callback(null,result);
+
+        })
+    });
+};
+
 module.exports = users;

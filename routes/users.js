@@ -2,6 +2,19 @@ var express = require('express');
 var router = express.Router();
 
 var users = require('../models/users');
+var qs = require('qs');
+
+//根据多个用户ID (存在query信息中) 获取用户组信息
+router.post('/:id/usergroups', function(req, res) {
+    users.setUsergroups(req.params.id,qs.parse(req.body.data),function(err, data){
+        if (err) {
+            console.error(err);
+        } else {
+            res.json(data);
+        }
+    });
+});
+
 
 //根据多个用户ID (存在query信息中) 获取用户组信息
 router.get('/usergroups', function(req, res) {
