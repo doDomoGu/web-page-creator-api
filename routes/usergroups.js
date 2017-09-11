@@ -3,6 +3,18 @@ var router = express.Router();
 
 var usergroups = require('../models/usergroups');
 
+
+//根据多个用户组ID (存在query信息中) 获取用户信息
+router.get('/users', function(req, res) {
+    usergroups.getUsersSet(req.query,function(err, data){
+        if (err) {
+            console.error(err);
+        } else {
+            res.json(data);
+        }
+    });
+});
+
 //根据用户组ID 设置用户组下的用户
 router.post('/:id/users', function(req, res) {
     usergroups.setUser(req.params.id,req.body,function(err, data){
@@ -14,7 +26,10 @@ router.post('/:id/users', function(req, res) {
     });
 });
 
-//根据用户组ID 获取用户组下的用户
+
+
+
+//根据单个用户组ID 获取用户组下的用户
 router.get('/:id/users', function(req, res) {
     usergroups.getUser(req.params.id,req.query,function(err, data){
         if (err) {

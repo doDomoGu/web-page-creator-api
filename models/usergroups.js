@@ -16,6 +16,55 @@ var usergroups = new models(
     ]
 );
 
+usergroups.getUsersSet = function(query,callback){
+    var usergroup_ids = query.usergroup_ids;
+
+    var usergroup_id_arr = usergroup_ids?usergroup_ids.split(','):[];
+
+
+    var that = this;
+
+    var result = {
+        success : false,
+        data : []
+    };
+
+    mysql.query('select * from `user` ', function (error, res) {
+        if (error){
+            return callback(null,error);
+        }
+
+        var users = [];
+
+        for(var i in res){
+            users[res[i].id] = res[i].id;
+        }
+
+        mysql.query('select * from `usergroup_user` where usergroup_id in (?) ',[usergroup_id_arr], function (error, res) {
+            if (error){
+                return callback(null,error);
+            }
+
+            var data = [];
+
+            for(var i in res){
+                if(!data[res[i].usergroup_id]){
+                    data[res[i].usergroup_id] = [];
+                }
+                var user_id = users[res[i].user_id];
+                if(user_id)
+                    data[res[i].usergroup_id].push(user_id);
+            }
+
+            result.success = true;
+            result.data = data;
+
+            return callback(null,result);
+
+        });
+    });
+};
+
 
 usergroups.setUser = function(id,data,callback){
     var usergroup_id = id;
