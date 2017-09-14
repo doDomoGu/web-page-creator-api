@@ -9,7 +9,9 @@ router.post('/', function(req, res) {
         if (err) {
             console.error(err);
         } else {
-            res.json(result);
+            //setTimeout(function(){
+                res.json(result);
+            //},5000);
         }
     });
 });
@@ -20,7 +22,9 @@ router.get('/', function(req, res) {
         if (err) {
             console.error(err);
         } else {
-            res.json(result);
+            //setTimeout(function(){
+                res.json(result);
+            //},2000);
         }
     });
 });
