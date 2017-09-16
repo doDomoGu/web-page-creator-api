@@ -24,11 +24,11 @@ var users = new models(
 
 );
 
-var auth_roles = {
+/*var auth_roles = {
     1:['super_admin'],
     2:['user_admin','website_admin'],
     3:['user_admin']
-};
+};*/
 
 function generateToken(user_id){
     var token = jwt.sign(
@@ -79,28 +79,56 @@ users.auth = function(data,callback){
             var _res = res[0];
 
             if(res[0].password==data.password){
+
+
+
                 result.success = true;
                 result.error_msg = false;
                 result.user_id = _res.id;
-                result.roles = auth_roles[_res.id]!=undefined?auth_roles[_res.id]:[];
-                var token = generateToken(_res.id);
-                result.token = token;
-                var expired = new Date(new Date().getTime() + 60*60*24*1000);
-
-                var expired_time = '';
-                expired_time += expired.getFullYear();
-                expired_time += "-"+ (expired.getMonth()+1 < 10 ? '0' + (expired.getMonth()+1) : (expired.getMonth()+1));
-                expired_time += "-"+ (expired.getDate() < 10 ? '0' + expired.getDate() : expired.getDate());
-                expired_time += " "+ (expired.getHours() < 10 ? '0' + expired.getHours() : expired.getHours());
-                expired_time += ":"+ (expired.getMinutes() < 10 ? '0' + expired.getMinutes() : expired.getMinutes());
-                expired_time += ":"+ (expired.getSeconds() < 10 ? '0' + expired.getSeconds() : expired.getSeconds());
 
 
-                mysql.query('INSERT INTO `user_auth_token` SET ?',{user_id:_res.id,token:token,expired_time:expired_time}, function (error, res) {
+                mysql.query('select ug.alias from `usergroup_user` ugu join `usergroup` ug on ugu.usergroup_id = ug.id where ugu.user_id = ? ',[_res.id], function (error, res) {
                     if (error) throw error;
 
-                    //return callback(null,{id:res.insertId});
+                    var roles = [];
+                    if(res.length>0) {
+
+                        for (var i in res) {
+                            roles.push(res[i].alias);
+                        }
+                    }
+
+                    result.roles = roles;
+
+
+                    var token = generateToken(_res.id);
+                    result.token = token;
+                    var expired = new Date(new Date().getTime() + 60*60*24*1000);
+
+                    var expired_time = '';
+                    expired_time += expired.getFullYear();
+                    expired_time += "-"+ (expired.getMonth()+1 < 10 ? '0' + (expired.getMonth()+1) : (expired.getMonth()+1));
+                    expired_time += "-"+ (expired.getDate() < 10 ? '0' + expired.getDate() : expired.getDate());
+                    expired_time += " "+ (expired.getHours() < 10 ? '0' + expired.getHours() : expired.getHours());
+                    expired_time += ":"+ (expired.getMinutes() < 10 ? '0' + expired.getMinutes() : expired.getMinutes());
+                    expired_time += ":"+ (expired.getSeconds() < 10 ? '0' + expired.getSeconds() : expired.getSeconds());
+
+
+                    mysql.query('INSERT INTO `user_auth_token` SET ?',{user_id:_res.id,token:token,expired_time:expired_time}, function (error, res) {
+                        if (error) throw error;
+
+
+                        return callback(null,result);
+                        //return callback(null,{id:res.insertId});
+                    });
+                    //return callback(null,result);
+
                 });
+
+                //result.roles = auth_roles[_res.id]!=undefined?auth_roles[_res.id]:[];
+
+
+
 
 
 
@@ -109,64 +137,18 @@ users.auth = function(data,callback){
             }else{
                 result.error_msg = '用户名或密码错误 (001)';
                 //return callback(null,{error:'don\'t find the user'});
+                return callback(null,result);
             }
 
         }else{
             //return callback(null,{error:'don\'t find the user'});
             result.error_msg = '用户名或密码错误 (002)';
+            return callback(null,result);
         }
-        return callback(null,result);
+
     });
 
-    /*redisClient.hgetall(users.modelName, function(error, res){
-        if(error) {
-            console.log(error);
-        } else {
-            var result = {
-                error_msg : '未知错误',
-                success : false,
-                token : '',
-                user_id : 0,
-                roles : []
-            };
-            var nameflag = false; //是否找到用户名
 
-            for(var i in res){
-                if(!nameflag) {
-                    var _res = JSON.parse(res[i]);
-                    if (_res.username == data.username) {
-                        nameflag = true;
-                        if (_res.password == data.password) {
-                            result.success = true;
-                            result.error_msg = false;
-                            result.user_id = i;
-                            result.roles = auth_roles[i]!=undefined?auth_roles[i]:[];
-                            var token = generateToken(i);
-                            result.token = token;
-                            redisClient.hset('wpc_jwt', token , JSON.stringify({user_id:result.user_id,roles:result.roles}) , function(error, res) {
-                                if (error) {
-                                    console.log(error);
-                                }
-                            })
-
-
-                        } else {
-                            result.error_msg = '用户名或密码错误 (001)';
-                        }
-                    }
-                }
-            }
-
-            if(!nameflag){
-                result.error_msg = '用户名或密码错误 (002)';
-                //callback(null,{msg:'用户名或密码错误'});
-            }
-
-
-            callback(null,result);
-        }
-        //callback(error,{});
-    });*/
 };
 
 users.getUserInfoByToken = function(data,callback){
@@ -177,22 +159,39 @@ users.getUserInfoByToken = function(data,callback){
         user_id : 0,
         roles : []
     };
-    mysql.query('select * from `user_auth_token` where token = ?',[token], function (error, res) {
+
+
+
+    mysql.query('select user_id,expired_time from `user_auth_token` where token = ?',[token], function (error, res) {
         if (error) throw error;
 
         if(res.length==1){
-            var expired = new Date(res[0].expired_time);
+            var _res = res[0];
+
+            var expired = new Date(_res.expired_time);
             var now = new Date();
             if(now < expired){
                 result.success = true;
                 result.token = token;
-                result.user_id = res[0].user_id;
-                result.roles = auth_roles[res[0].user_id];
+                result.user_id = _res.user_id;
+
+                mysql.query('select ug.alias from `usergroup_user` ugu join `usergroup` ug on ugu.usergroup_id = ug.id where ugu.user_id = ? ',[_res.user_id], function (error, res) {
+                    if (error) throw error;
+                    var roles = [];
+                    if(res.length>0){
+                        for(var i in res){
+                            roles.push(res[i].alias);
+                        }
+                    }
+                    result.roles = roles;
+                    return callback(null,result);
+                })
+            }else{
+                return callback(null,result);
             }
+        }else{
+            return callback(null,result);
         }
-
-
-        return callback(null,result);
     });
 };
 users.deleteToken = function(data,callback){
