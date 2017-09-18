@@ -1,12 +1,15 @@
 var models = require('./_models');
 
 var websites = new models(
-    'websites',
+    'website',
     {
+        id: 0,
+        alias: "",
         name: "",
         user_id: 0,
-        status: 12
-    }
+        status: 1
+    },
+    []
 );
 
 module.exports = websites;

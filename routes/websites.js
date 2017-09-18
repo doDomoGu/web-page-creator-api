@@ -2,17 +2,15 @@ var express = require('express');
 var router = express.Router();
 var websites = require('../models/websites');
 
+var qs = require('qs');
+
 
 //获取全部
 router.get('/', function(req, res) {
-    websites.list(function(err, data){
+    websites.list(req.query,function(err, data){
         if (err) {
             console.error(err);
         } else {
-            res.header("Access-Control-Allow-Origin", "*");
-            res.header('Access-Control-Allow-Methods', 'PUT, GET, POST, DELETE, OPTIONS');
-            res.header("Access-Control-Allow-Headers", "X-Requested-With");
-            res.header('Access-Control-Allow-Headers', 'Content-Type');
             res.json(data);
         }
     });
