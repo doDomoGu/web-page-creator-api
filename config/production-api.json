@@ -5,5 +5,11 @@
         "port":"6379",
         "index":"10"
 
+    },
+    "mysql":{
+        "host"     : "127.0.0.1",
+        "user"     : "root",
+        "password" : "gljgogo",
+        "database" : "web_page_creator"
     }
 }
