@@ -8,59 +8,112 @@ function _models(modelName,model,required){
     const that = this;
 
     this.list = function(query,callback) {
-        let sql = 'SELECT * FROM `' + this.modelName + '`';
-        let sqlCount = 'SELECT count(id) as `total_count` FROM `' + this.modelName + '`';
-        let where = ' WHERE 1 = 1 ';
-
         let page = 1;
         let pageSize = 10;
 
-        if(JSON.stringify(query)!=='{}'){
+        let total_count = 0;
+        let data = [];
 
+        let sql = 'SELECT * FROM `' + this.modelName + '`';
+        let sqlCount = 'SELECT count(id) as `total_count` FROM `' + this.modelName + '`';
+
+        let where = ' WHERE 1 = 1 ';
+
+
+
+        if(JSON.stringify(query)!=='{}'){
+            let search = [];
             for(let i in query){
                 if(query.hasOwnProperty(i)){
-                    //TODO 使用不同的判断符号
-                    //console.log(i,query[i],typeof query[i]);
                     if(i ==='page'){
                         page = parseInt(query[i]);
                     }else if(i ==='pageSize'){
                         pageSize = parseInt(query[i]);
                     }else if(query[i]){
-                        where += ' AND `'+i+'` like '+mysql.escape('%'+query[i]+'%');
+                        search[i] = query[i];
                     }
+                }
+            }
+            if(search.length > 0){
+                //TODO 使用不同的判断符号
+                for(let i in search){
+                    where += ' AND `'+i+'` like '+mysql.escape('%'+search[i]+'%');
                 }
             }
         }
 
-        mysql.query(sqlCount + where, function (error, res) {
-            if (error) throw error;
+        let getList = function(sql,where,page,pageSize){
 
-            let total_count = res[0].total_count;
+            return new Promise(function (resolve, reject) {
 
-            let limit = ' limit '+(page>1?parseInt((page-1)*pageSize):0)+','+pageSize;
+                console.log(new Date(),'start getList');
 
-            mysql.query(sql + where + limit, function (error, res) {
+                let sql_limit = ' limit ' + (page > 1 ? parseInt((page - 1) * pageSize) : 0) + ',' + pageSize;
 
-                if (error) throw error;
+                mysql.query(sql + where + sql_limit, function (error, res) {
+                    console.log(new Date(),'done getList');
+                    if (error) {
+                        throw error;
+                    }else{
+                        let data = [];
 
-                let data = [];
-
-                if (!!res) {
-                    for (let i in res) {
-                        if(res.hasOwnProperty(i)){
-                            let resOne = {};
-                            for (let j in model) {
-                                if(model.hasOwnProperty(j)) {
-                                    resOne[j] = res[i][j];
+                        if (!!res) {
+                            for (let i in res) {
+                                if(res.hasOwnProperty(i)){
+                                    let resOne = {};
+                                    for (let j in model) {
+                                        if(model.hasOwnProperty(j)) {
+                                            resOne[j] = res[i][j];
+                                        }
+                                    }
+                                    data.push(resOne);
                                 }
                             }
-                            data.push(resOne);
                         }
+                        return resolve(data);
                     }
-                }
-                return callback(null,{total_count:total_count,data:data,page:page,pageSize:pageSize});
+                });
+
             });
-        });
+        };
+
+        let getCount = function(sql,where){
+
+            console.log(new Date(),'start getCount');
+
+            return new Promise(function (resolve, reject) {
+
+                mysql.query(sql + where, function (error, res) {
+
+                    console.log(new Date(),'done getCount');
+
+                    if (error) {
+                        return reject(error);
+                    } else {
+                        let total_count = res[0].total_count;
+
+                        return resolve(total_count);
+                        //return resolve(getList);
+                    }
+                });
+            });
+        };
+        //return callback(null,{total_count:total_count,data:data,page:page,pageSize:pageSize});
+
+        getCount(sqlCount,where)
+            .then(count=>{
+
+                total_count = count;
+
+                console.log('count:',count);
+
+                return getList(sql,where,page,pageSize);
+            })
+            .then(data=>{
+
+                return callback(null,{total_count:total_count,data:data,page:page,pageSize:pageSize});
+            })
+            .catch(error=> console.log(error));
     };
 
     this.get = function(id,callback){
