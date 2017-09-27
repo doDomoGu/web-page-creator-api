@@ -19,8 +19,6 @@ function _models(modelName,model,required){
 
         let where = ' WHERE 1 = 1 ';
 
-
-
         if(JSON.stringify(query)!=='{}'){
             let search = [];
             for(let i in query){
@@ -46,12 +44,14 @@ function _models(modelName,model,required){
 
             return new Promise(function (resolve, reject) {
 
-                console.log(new Date(),'start getList');
+                //console.log(new Date(),'start getList');
 
                 let sql_limit = ' limit ' + (page > 1 ? parseInt((page - 1) * pageSize) : 0) + ',' + pageSize;
 
                 mysql.query(sql + where + sql_limit, function (error, res) {
-                    console.log(new Date(),'done getList');
+
+                    //console.log(new Date(),'done getList');
+
                     if (error) {
                         throw error;
                     }else{
@@ -79,37 +79,33 @@ function _models(modelName,model,required){
 
         let getCount = function(sql,where){
 
-            console.log(new Date(),'start getCount');
-
             return new Promise(function (resolve, reject) {
+
+            //console.log(new Date(),'start getCount');
 
                 mysql.query(sql + where, function (error, res) {
 
-                    console.log(new Date(),'done getCount');
+                    //console.log(new Date(),'done getCount');
 
                     if (error) {
                         return reject(error);
                     } else {
-                        let total_count = res[0].total_count;
-
-                        return resolve(total_count);
-                        //return resolve(getList);
+                        return resolve(res[0].total_count);
                     }
                 });
             });
         };
-        //return callback(null,{total_count:total_count,data:data,page:page,pageSize:pageSize});
 
         getCount(sqlCount,where)
-            .then(count=>{
+            .then(c=>{
 
-                total_count = count;
-
-                console.log('count:',count);
+                total_count = c;
 
                 return getList(sql,where,page,pageSize);
             })
-            .then(data=>{
+            .then(d=>{
+
+                data = d;
 
                 return callback(null,{total_count:total_count,data:data,page:page,pageSize:pageSize});
             })
