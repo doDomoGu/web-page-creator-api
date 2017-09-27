@@ -232,86 +232,126 @@ users.deleteToken = function(data,callback){
 };
 
 users.getUsergroups = function(id,query,callback){
-    var user_id = id;
+    let user_id = id;
     //var user_ids = data.user_ids;
     //var user_id_arr = user_ids.split(',');
 
-    var that = this;
+    //var that = this;
 
-    var result = {
+    let result = {
         success : false,
         user_id : 0,
         usergroup_ids : []
     };
-    mysql.query('select * from `usergroup_user` where user_id = ? ',[user_id], function (error, res) {
-        if (error){
-            return callback(null,error);
-        }
 
-        var usergroup_ids = [];
+    let p = function(user_id){
+        return new Promise(function (resolve, reject) {
+            mysql.query('select * from `usergroup_user` where user_id = ? ',[user_id], function (error, res) {
+                if (error){
+                    return callback(null,error);
+                }
 
-        for(var i in res){
-            usergroup_ids.push(res[i].usergroup_id);
-        }
+                let usergroup_ids = [];
 
-        result.success = true;
-        result.user_id = user_id;
-        result.usergroup_ids = usergroup_ids;
+                for(let i in res){
+                    if(res.hasOwnProperty(i)){
+                        usergroup_ids.push(res[i].usergroup_id);
+                    }
+                }
 
-        return callback(null,result);
+                let r = {};
 
-    });
+                r.success = true;
+                r.user_id = user_id;
+                r.usergroup_ids = usergroup_ids;
+
+                return resolve(r);
+
+            });
+        })
+    }
+
+    p(user_id)
+        .then(r=>{
+            for(let i in r){
+                if(r.hasOwnProperty(i) && result.hasOwnProperty(i)){
+                    result[i] = r[i];
+                }
+            }
+
+            return callback(null,result);
+        });
+
 
 };
 users.getUsergroupsSet = function(query,callback){
-    var user_ids = query.userids;
+    let user_ids = query.userids;
 
-    var user_id_arr = user_ids?user_ids.split(','):[];
+    let user_id_arr = user_ids?user_ids.split(','):[];
 
 
-    var that = this;
 
-    var result = {
+    let result = {
         success : false,
         data : []
     };
 
-    mysql.query('select * from `usergroup` ', function (error, res) {
-        if (error){
-            return callback(null,error);
-        }
-
-        var usergroups = [];
-
-        for(var i in res){
-            usergroups[res[i].id] = res[i].name;
-        }
-
-        mysql.query('select * from `usergroup_user` where user_id in (?) ',[user_id_arr], function (error, res) {
-            if (error){
-                return callback(null,error);
-            }
-
-            var data = [];
-
-            for(var i in res){
-                if(!data[res[i].user_id]){
-                    data[res[i].user_id] = [];
+    let getUsergroup = function(){
+        return new Promise(function (resolve, reject) {
+            mysql.query('select * from `usergroup` ', function (error, res) {
+                if (error) {
+                    return callback(null, error);
                 }
-                var groupname = usergroups[res[i].usergroup_id];
-                if(groupname)
-                    data[res[i].user_id].push(groupname);
-            }
 
-            result.success = true;
-            //result.user_id = user_id;
-            //result.usergroup_ids = usergroup_ids;
-            result.data = data;
+                let usergroups = [];
 
-            return callback(null,result);
+                for (let i in res) {
+                    if (res.hasOwnProperty(i)) {
+                        usergroups[res[i].id] = res[i].name;
+                    }
+                }
+                return resolve(usergroups);
+            })
+        })
+    };
 
-        });
-    });
+    let getUsergroupUser = function(user_id_arr,usergroups){
+
+        return new Promise(function (resolve, reject) {
+            mysql.query('select * from `usergroup_user` where user_id in (?) ',[user_id_arr], function (error, res) {
+                if (error){
+                    return callback(null,error);
+                }
+
+                let data = [];
+
+                for(let i in res){
+                    if(res.hasOwnProperty(i)){
+                        if(!data[res[i].user_id]){
+                            data[res[i].user_id] = [];
+                        }
+                        let groupname = usergroups[res[i].usergroup_id];
+                        if(groupname)
+                            data[res[i].user_id].push(groupname);
+                    }
+                }
+
+                let r = {};
+
+                r.success = true;
+
+                r.data = data;
+
+                return resolve(r);
+
+            });
+        })
+    };
+
+    getUsergroup()
+        .then(usergroups=>getUsergroupUser(user_id_arr,usergroups))
+        .then(r=>callback(null,r));
+
 };
 
 
