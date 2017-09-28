@@ -96,9 +96,20 @@ function _models(modelName,model,required){
             });
         };
 
-        getCount(sqlCount,where)
-            .then(c=>{
+        let run = async function () {
+            let c = await getCount(sqlCount,where);
+            total_count = c;
+            let d = await getList(sql,where,page,pageSize);
+            data = d;
+            return callback(null,{total_count:total_count,data:data,page:page,pageSize:pageSize});
+        };
 
+        return run();
+
+
+        /*getCount(sqlCount,where)
+            .then(c=>{
+                console.log('==== getCount end ====');
                 total_count = c;
 
                 return getList(sql,where,page,pageSize);
@@ -106,10 +117,10 @@ function _models(modelName,model,required){
             .then(d=>{
 
                 data = d;
-
+                console.log('==== getList end ====');
                 return callback(null,{total_count:total_count,data:data,page:page,pageSize:pageSize});
             })
-            .catch(error=> console.log(error));
+            .catch(error=> console.log(error));*/
     };
 
     this.get = function(id,callback){
