@@ -20,8 +20,9 @@ function _models(modelName,model,required){
         let where = ' WHERE 1 = 1 ';
 
         if(JSON.stringify(query)!=='{}'){
-            let search = [];
+            let search = {};
             for(let i in query){
+
                 if(query.hasOwnProperty(i)){
                     if(i ==='page'){
                         page = parseInt(query[i]);
@@ -32,9 +33,10 @@ function _models(modelName,model,required){
                     }
                 }
             }
-            if(search.length > 0){
+            if(JSON.stringify(search)!=='{}'){
                 //TODO 使用不同的判断符号
                 for(let i in search){
+
                     where += ' AND `'+i+'` like '+mysql.escape('%'+search[i]+'%');
                 }
             }
@@ -96,15 +98,12 @@ function _models(modelName,model,required){
             });
         };
 
-        let run = async function () {
-            let c = await getCount(sqlCount,where);
-            total_count = c;
-            let d = await getList(sql,where,page,pageSize);
-            data = d;
+        return async function () {
+            total_count = await getCount(sqlCount,where);
+            data = await getList(sql,where,page,pageSize);
             return callback(null,{total_count:total_count,data:data,page:page,pageSize:pageSize});
-        };
+        }();
 
-        return run();
 
 
         /*getCount(sqlCount,where)
