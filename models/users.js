@@ -73,6 +73,7 @@ users.auth = function(data,callback){
             success : false,
             token : '',
             user_id : 0,
+            user_info: {},
             roles : []
         };
         if(res.length == 1){
@@ -85,6 +86,7 @@ users.auth = function(data,callback){
                 result.success = true;
                 result.error_msg = false;
                 result.user_id = _res.id;
+                result.user_info = _res;
 
 
                 mysql.query('select ug.alias from `usergroup_user` ugu join `usergroup` ug on ugu.usergroup_id = ug.id where ugu.user_id = ? ',[_res.id], function (error, res) {
@@ -152,47 +154,103 @@ users.auth = function(data,callback){
 };
 
 users.getUserInfoByToken = function(data,callback){
-    var token = data.token;
-    var result = {
+    let token = data.token;
+
+    let result = {
         success : false,
         token : '',
         user_id : 0,
+        user_info: {},
         roles : []
     };
 
 
+    let checkToken = function(token){
 
-    mysql.query('select user_id,expired_time from `user_auth_token` where token = ?',[token], function (error, res) {
-        if (error) throw error;
+        return new Promise(function (resolve, reject) {
 
-        if(res.length==1){
-            var _res = res[0];
+            mysql.query('select user_id,expired_time from `user_auth_token` where token = ?',[token], function (error, res) {
 
-            var expired = new Date(_res.expired_time);
-            var now = new Date();
-            if(now < expired){
-                result.success = true;
-                result.token = token;
-                result.user_id = _res.user_id;
+                if (error) {
+                    return reject(error);
+                } else {
+                    let _result = {};
 
-                mysql.query('select ug.alias from `usergroup_user` ugu join `usergroup` ug on ugu.usergroup_id = ug.id where ugu.user_id = ? ',[_res.user_id], function (error, res) {
-                    if (error) throw error;
-                    var roles = [];
-                    if(res.length>0){
-                        for(var i in res){
-                            roles.push(res[i].alias);
+                    if(res.length === 1){
+
+                        let _res = res[0];
+
+                        if(new Date() < new Date(_res.expired_time)){
+                            _result.success = true;
+                            _result.token = token;
+                            _result.user_id = _res.user_id;
                         }
                     }
-                    result.roles = roles;
-                    return callback(null,result);
-                })
-            }else{
-                return callback(null,result);
+
+                    return resolve(_result);
+                }
+            });
+        });
+    };
+
+    let getUserinfo = function(user_id){
+        return new Promise(function (resolve, reject) {
+            mysql.query('select name,mobile from `user` where id = ? ',[user_id], function (error, res) {
+                if (error){
+                    return reject(error);
+                }else {
+                    let user_info = {};
+                    if (res.length === 1) {
+                        let _res = res[0];
+                        for (let i in _res) {
+                            if (_res.hasOwnProperty(i)) {
+                                user_info[i] = _res[i];
+                            }
+                        }
+                    }
+                    return resolve(user_info);
+                }
+            })
+        });
+    };
+
+    let getRoles = function(user_id){
+
+        return new Promise(function (resolve, reject) {
+            mysql.query('select ug.alias from `usergroup_user` ugu join `usergroup` ug on ugu.usergroup_id = ug.id where ugu.user_id = ? ',[user_id], function (error, res) {
+                if (error){
+                    return reject(error);
+                }else {
+                    let roles = [];
+                    if (res.length > 0) {
+                        for (let i in res) {
+                            if (res.hasOwnProperty(i)) {
+                                roles.push(res[i].alias);
+                            }
+                        }
+                    }
+                    return resolve(roles);
+                }
+            })
+        });
+    };
+
+    return async function () {
+        let _result = await checkToken(token);
+        for(let i in _result){
+            if(_result.hasOwnProperty(i) && result.hasOwnProperty(i)){
+                result[i] = _result[i];
             }
-        }else{
-            return callback(null,result);
         }
-    });
+
+        result.user_info = await getUserinfo(result.user_id);
+
+        result.roles = await getRoles(result.user_id);
+
+        return callback(null,result);
+    }();
+
+
 };
 users.deleteToken = function(data,callback){
     var token = data.token;
