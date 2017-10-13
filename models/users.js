@@ -182,7 +182,7 @@ users.getUserInfoByToken = function(data,callback){
 
                         if(new Date() < new Date(_res.expired_time)){
                             _result.success = true;
-                            _result.token = token;
+                            //_result.token = token;
                             _result.user_id = _res.user_id;
                         }
                     }
@@ -201,12 +201,13 @@ users.getUserInfoByToken = function(data,callback){
                 }else {
                     let user_info = {};
                     if (res.length === 1) {
-                        let _res = res[0];
+                        user_info = res[0];
+                        /*let _res = res[0];
                         for (let i in _res) {
                             if (_res.hasOwnProperty(i)) {
                                 user_info[i] = _res[i];
                             }
-                        }
+                        }*/
                     }
                     return resolve(user_info);
                 }
@@ -237,6 +238,14 @@ users.getUserInfoByToken = function(data,callback){
 
     return async function () {
         let _result = await checkToken(token);
+
+        /*const {success,user_id} = _result;
+
+        console.log(`success:${success}`);
+        console.log(`user_id:${user_id}`);*/
+
+
+
         for(let i in _result){
             if(_result.hasOwnProperty(i) && result.hasOwnProperty(i)){
                 result[i] = _result[i];
